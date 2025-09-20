@@ -1,128 +1,115 @@
 # Kernel Instrumental Quirúrgico
-**Sistema de Gestión de Instrumental Quirúrgico – Trabajo Final**
+**Sistema de Gestión de Instrumental Quirúrgico — Trabajo Final**
 
-## 📌 Descripción
-Este proyecto corresponde al **Trabajo Final de la Tecnicatura Superior en Análisis de Sistemas**.  
-El objetivo es desarrollar una aplicación interna que optimiza la **gestión de instrumental quirúrgico** en el **Sanatorio Finochietto**, reemplazando planillas en papel por un sistema digital confiable y escalable.
+## Descripción
+Proyecto correspondiente al **Trabajo Final de la Tecnicatura Superior en Análisis de Sistemas**.  
+Objetivo: desarrollar una aplicación interna para optimizar la **gestión del instrumental quirúrgico** del **Sanatorio Finochietto**, reemplazando planillas en papel por un sistema digital confiable y escalable.
 
-### Alcance del MVP
+## Alcance del MVP
 - Inventario digital de instrumentos y cajas.  
-- Búsqueda rápida de instrumental.  
-- Consulta detallada de cajas.  
+- Búsqueda rápida de instrumental por nombre, tipo o código interno.  
+- Consulta detallada del contenido de cada caja.  
 - Checklists digitales pre y post cirugía.  
-- Gestión de roles y permisos por usuario.  
-- Exportación/impresión de listados.
+- Gestión de usuarios y **roles** (Circulante, Coordinación, Jefatura).  
+- Exportación e impresión de listados (CSV / vista preparada para impresión).
 
-### Mejoras futuras (fuera del MVP)
-- Auditoría detallada de cambios (AuditLog).  
-- Importación masiva desde CSV/XLSX.  
-- Reportes y dashboards analíticos.  
-- Notificaciones en tiempo real (SignalR).
-
----
-
-## 🛠️ Stack Tecnológico
-- **C# con Blazor Server (.NET 8)** → Frontend y backend en un mismo proyecto.  
-- **Entity Framework Core** → Acceso a datos con LINQ y migraciones.  
-- **SQLite** (MVP) → Base liviana y simple de desplegar.  
-- **ASP.NET Identity** → Autenticación y roles (Circulante, Coordinación, Jefatura).  
-- **Logging nativo .NET** → Registro básico de eventos/errores.  
-
-> Futuras opciones: **SQL Server Express**, **SignalR**, importación **CSV/XLSX**, **AuditLog** con interceptores EF.
+## Mejoras previstas (fuera del MVP)
+- **AuditLog** (trazabilidad detallada de cambios, con usuario, acción y marca temporal).  
+- **Importación masiva** desde CSV/XLSX con previsualización.  
+- **Reportes y dashboards** (uso de instrumental, indicadores operativos).  
+- **Actualización en tiempo real** mediante SignalR.
 
 ---
 
-## ⚙️ Arquitectura (resumen)
-- **Blazor Components** para pantallas: Búsqueda, Detalle de Caja, Checklist, Admin.  
-- **EF Core** para entidades: `Instrument`, `Box`, `BoxItem`, `Checklist`.  
-- **Identity** para control de acceso por roles.  
+## Stack tecnológico
+- **C# con Blazor Server (.NET 8)**: frontend y backend en un mismo proyecto.  
+- **Entity Framework Core**: acceso a datos con LINQ y migraciones.  
+- **SQLite** (MVP): base liviana y de rápida configuración.  
+- **ASP.NET Identity**: autenticación y autorización basada en roles.  
+- **Logging nativo .NET**: registro básico de eventos y errores.
+
+> Alternativa futura de base de datos: **SQL Server Express**, sin cambios sustanciales en la lógica de negocio.
 
 ---
 
-## 📂 Estructura del Proyecto (sugerida)
-- `KernelInstrumental/` (solución)
-  - `README.md`
-  - `KernelInstrumental.sln`
-  - `KernelInstrumental/` (proyecto Blazor Server)
-    - `Pages/` (componentes .razor)
-    - `Data/` (DbContext, configuraciones EF)
-    - `Models/` (entidades de dominio)
-    - `Services/` (lógica de negocio)
-    - `Areas/Identity/` (autenticación y roles)
-    - `wwwroot/` (css/js/img)
-    - `Program.cs`
-    - `appsettings.json` (cadena de conexión SQLite)
+## Arquitectura (resumen)
+- **Blazor Components** para las pantallas principales: Búsqueda, Detalle de Caja, Checklist, Administración (ABM).  
+- **EF Core** para el mapeo de entidades y consultas: *Instrument*, *Box*, *BoxItem* (relación M:N), *Checklist*.  
+- **ASP.NET Identity** para control de acceso y autorización por roles.  
+- Endpoints mínimos para **exportación CSV** y **descargas**.
 
 ---
 
-## 🚀 Funcionalidades MVP
-
-1) **Login y Roles**  
-   - *Circulante*: solo lectura.  
-   - *Coordinación/Jefatura*: edición y gestión.
-
-2) **Búsqueda de instrumental**  
-   - Filtros por nombre, tipo o código.  
-   - Devuelve las **cajas donde se encuentra** cada instrumento.
-
-3) **Detalle de caja**  
-   - Listado completo de instrumentos.  
-   - Exportación a CSV / impresión simple.
-
-4) **Checklist digital**  
-   - Formularios pre y post cirugía.  
-   - Validación de faltantes/sobrantes y guardado.
-
-5) **ABM (Alta/Baja/Modificación)**  
-   - Gestión de instrumentos, cajas y relaciones (BoxItem).  
-   - Restringido a Coordinación/Jefatura.
+## Estructura del proyecto (sugerida)
+- KernelInstrumental/ (solución)
+  - README.md  
+  - KernelInstrumental.sln  
+  - KernelInstrumental/ (proyecto Blazor Server)  
+    - Pages/ (componentes .razor)  
+    - Data/ (DbContext, configuración EF, migraciones)  
+    - Models/ (entidades de dominio)  
+    - Services/ (lógica de aplicación)  
+    - Areas/Identity/ (autenticación y roles)  
+    - wwwroot/ (recursos estáticos)  
+    - Program.cs  
+    - appsettings.json (cadena de conexión a SQLite)
 
 ---
 
-## 📊 Ejemplos de Uso
+## Funcionalidades
+1. **Autenticación y roles**  
+   - *Circulante*: acceso de solo lectura.  
+   - *Coordinación* y *Jefatura*: edición y gestión del inventario y relaciones.
 
-**Búsqueda de instrumental**  
-- Ingresar “tijera de Metzembaun” → el sistema lista cajas donde aparece (p. ej. Caja #3, Caja #7).
+2. **Búsqueda de instrumental**  
+   - Filtros por nombre, tipo o código interno.  
+   - Listado de **cajas** que contienen el instrumento.
 
-**Checklist preoperatorio**  
-- Seleccionar caja → mostrar lista digitalizada → marcar presentes/faltantes → guardar.
+3. **Detalle de caja**  
+   - Visualización completa del contenido.  
+   - Exportación a **CSV** y vista preparada para **impresión**.
 
----
+4. **Checklist pre/post**  
+   - Registro digital del chequeo de instrumentos (presentes/faltantes/sobrantes).  
+   - Asociación del registro al usuario autenticado y marca temporal.
 
-## ▶️ Cómo ejecutar (desarrollo)
-1. Requisitos:
-   - .NET 8 SDK  
-   - Git
-
-2. Clonar y entrar al proyecto:
-   - `git clone <URL_DE_TU_REPO>`
-   - `cd KernelInstrumental/KernelInstrumental`
-
-3. Configurar cadena de conexión (SQLite por defecto):
-   - Editar `appsettings.json` si querés cambiar la ruta del archivo `.db`.
-
-4. Crear base y correr migraciones (si aplica):
-   - `dotnet build`
-   - `dotnet ef database update` *(si tenés migraciones ya creadas)*
-
-5. Ejecutar:
-   - `dotnet run`
-   - Abrir el navegador en la URL que indique la consola (p. ej. http://localhost:5000)
-
-> Para un demo rápido podés usar datos semilla (se recomienda crear un usuario admin y los roles *Circulante*, *Coordinación*, *Jefatura*).
+5. **ABM (Alta/Baja/Modificación)**  
+   - Instrumentos, cajas y relaciones *BoxItem*.  
+   - Acceso restringido a Coordinación/Jefatura.
 
 ---
 
-## 📅 Plan de Trabajo (MVP)
-1. **Semana 1** → Proyecto base, modelos y SQLite.  
-2. **Semana 2** → Búsqueda y Detalle de Caja.  
-3. **Semana 3** → Checklist + ABM.  
-4. **Semana 4** → Export/Impresión + pruebas internas.  
-5. **Semana 5** → Capacitación breve y demo final.
+## Puesta en marcha (desarrollo local)
+
+**Requisitos**  
+- .NET 8 SDK  
+- Git
+
+**Pasos**
+1. Clonar el repositorio (`git clone <URL_DEL_REPOSITORIO>`) y acceder al proyecto (`cd KernelInstrumental/KernelInstrumental`).  
+2. Configurar la base de datos (SQLite) en `appsettings.json` si corresponde.  
+3. Compilar y, en caso de existir migraciones, actualizar la base (`dotnet build` y `dotnet ef database update`).  
+4. Ejecutar la aplicación (`dotnet run`) y acceder a la URL indicada por la consola.
 
 ---
 
-## 👥 Equipo
+## Políticas de acceso
+- El acceso a funcionalidades de edición se controla mediante **roles** en ASP.NET Identity.  
+- Las páginas y componentes sensibles se protegen con autorizaciones específicas.  
+- Se recomienda crear al menos un usuario con rol **Jefatura** para la administración inicial.
+
+---
+
+## Plan de trabajo (MVP)
+1. Semana 1: proyecto base, modelos y configuración de SQLite.  
+2. Semana 2: pantallas de Búsqueda y Detalle de Caja.  
+3. Semana 3: Checklist y ABM.  
+4. Semana 4: exportación/impresión y pruebas internas.  
+5. Semana 5: validación con usuarios, capacitación breve y demostración.
+
+---
+
+## Equipo
 **Kernel Soluciones Informáticas**  
 - Ahmed Camila  
 - Aldecoa Florencia  
@@ -132,5 +119,5 @@ El objetivo es desarrollar una aplicación interna que optimiza la **gestión de
 
 ---
 
-## 📖 Licencia
-Uso académico – Proyecto Final Tecnicatura Superior en Análisis de Sistemas.
+## Licencia
+Uso académico.
