@@ -1,142 +1,132 @@
-# Kernel Instrumental Quirúrgico
-**Sistema de Gestión de Instrumental Quirúrgico — Trabajo Final**
+# Kernel Instrumental — README (MVP)
+
+Gestión simple de **Instrumentos**, **Cajas** y **Contenido de Cajas** con autenticación.  
+Arquitectura minimalista para un MVP rápido y entendible por todo el equipo.
 
 ---
 
-## Resumen ejecutivo
-Aplicación interna destinada a optimizar la **gestión del instrumental quirúrgico** en el **Sanatorio Finochietto**, sustituyendo planillas en papel por un sistema digital confiable, trazable y escalable. Este repositorio implementa un **MVP** funcional sobre **.NET 8 (Blazor Server)** con **Entity Framework Core** y **SQLite**.
+## Stack / Arquitectura
+
+- **.NET 9 (ASP.NET Core + Blazor SSR)** — renderizado del lado del servidor (sin modo interactivo).
+- **Formularios HTML** → **Minimal APIs (POST)** → **EF Core** → **SQLite**.
+- **Identity** para registro/login/logout.
+- **SQLite** con **EnsureCreated** (sin migraciones por ahora).
+- **Sin estilos/CSS** (intencional, para simplicidad del MVP).
+
+Diagrama breve:
+```
+[ UI (Razor/SSR) ]
+   └─ (HTML form POST) → [ Minimal APIs ]
+                           └─ EF Core → [ SQLite (kernel_simple.db) ]
+```
 
 ---
 
-## Contenidos
-- [Alcance del MVP](#alcance-del-mvp)
-- [Mejoras previstas (post‑MVP)](#mejoras-previstas-postmvp)
-- [Tecnologías](#tecnologías)
-- [Arquitectura funcional](#arquitectura-funcional)
-- [Estructura del repositorio](#estructura-del-repositorio)
-- [Funcionalidades clave](#funcionalidades-clave)
-- [Roles y permisos](#roles-y-permisos)
-- [Puesta en marcha (desarrollo local)](#puesta-en-marcha-desarrollo-local)
-- [Plan de trabajo](#plan-de-trabajo)
-- [Equipo](#equipo)
-- [Licencia](#licencia)
+## Requerimientos
+
+- **.NET SDK 9.x**
+- **Editor**: Visual Studio / VS Code / Rider (a elección)
+- **Git** (opcional, si vas a clonar)
+- **DB Browser for SQLite** (opcional, para inspeccionar la base)
 
 ---
 
-## Alcance del MVP
-- Inventario digital de **instrumentos** y **cajas**.
-- Búsqueda rápida por **nombre**, **tipo** o **código interno**.
-- Consulta detallada del contenido de cada caja.
-- **Checklists** digitales **pre** y **post** cirugía.
-- Gestión de **usuarios** y **roles** (Circulante, Coordinación, Jefatura).
-- Exportación de listados (**CSV**) y **vista preparada para impresión**.
+## Configuración
 
-## Mejoras previstas (post‑MVP)
-- **AuditLog**: trazabilidad detallada de cambios (usuario, acción, marca temporal).
-- **Importación masiva** desde **CSV/XLSX** con previsualización.
-- **Reportes y dashboards** (indicadores de uso y eficiencia).
-- **Actualización en tiempo real** mediante **SignalR**.
+- Cadena de conexión en `WebApp/appsettings.json`:
+  ```json
+  "ConnectionStrings": {
+    "DefaultConnection": "Data Source=kernel_simple.db"
+  }
+  ```
+- La primera ejecución crea la base **`kernel_simple.db`** automáticamente (EnsureCreated).
+---
+
+## Ejecución
+
+```bash
+dotnet restore KernelInstrumental.sln
+dotnet build   KernelInstrumental.sln
+dotnet run --project WebApp/WebApp.csproj
+```
+- Perfil dev por defecto: **http://127.0.0.1:5007**
 
 ---
 
-## Tecnologías
-- **C# + Blazor Server (.NET 8)** — frontend y backend unificados.
-- **Entity Framework Core** — acceso a datos con LINQ y migraciones.
-- **SQLite** — base de datos para el MVP (simple, sin configuración adicional).
-- **ASP.NET Identity** — autenticación y autorización basada en roles.
-- **Logging nativo .NET** — registro básico de eventos y errores.
-> Alternativa futura: **SQL Server Express** (mayor concurrencia sin cambios significativos de lógica).
+## Rutas
+
+- **Registro / Login**  
+  `/Identity/Account/Register`, `/Identity/Account/Login`
+- **Inicio**  
+  `/`
+- **Instrumentos (Alta/Baja + listado)**  
+  `/admin/instruments`
+- **Cajas (Alta/Baja + listado)**  
+  `/admin/boxes`
+- **Contenido de Cajas** (elegir caja, agregar/quitar instrumentos; consolida cantidades)  
+  `/admin/boxitems`
+- **Búsqueda** (por nombre/tipo/código con links al detalle)  
+  `/search`
+- **Detalle de Caja**  
+  `/boxes/{id}`
+
+> Las rutas de administración requieren **usuario autenticado**.
 
 ---
 
-## Arquitectura funcional
-- **Blazor Components** para las pantallas principales: Búsqueda, Detalle de Caja, Checklist, Administración (ABM).
-- **EF Core** para el mapeo y consultas de entidades: *Instrument*, *Box*, *BoxItem* (M:N), *Checklist*.
-- **Identity** para control de acceso y autorización por roles.
-- Endpoints mínimos para **exportación CSV** y descargas.
-- Separación lógica por capas: **Presentación** (Blazor), **Aplicación** (Servicios), **Persistencia** (EF Core).
+## Cómo funciona (resumen)
+
+1. Las páginas SSR muestran **formularios HTML**.
+2. Cada **POST** va a una **Minimal API** (por ejemplo, `/admin/instruments/create`).
+3. El endpoint usa `ApplicationDbContext` (EF Core) para guardar y hace **Redirect** al listado (patrón **POST-Redirect-GET**).
+4. La página se vuelve a renderizar con los datos actualizados.
 
 ---
 
-## Estructura del repositorio
-- **KernelInstrumental/** (solución)
-  - **README.md**
-  - **KernelInstrumental.sln**
-  - **KernelInstrumental/** (proyecto Blazor Server)
-    - **Pages/** (componentes *.razor*)
-    - **Data/** (*DbContext*, configuración EF, migraciones)
-    - **Models/** (entidades de dominio)
-    - **Services/** (lógica de aplicación)
-    - **Areas/Identity/** (autenticación y roles)
-    - **wwwroot/** (recursos estáticos)
-    - **Program.cs**
-    - **appsettings.json** (cadena de conexión SQLite)
+## Base de datos (SQLite)
+
+- Tablas esperables en el MVP:  
+  **`Instruments`**, **`Boxes`**, **`BoxItems`**, tablas de **Identity** (`AspNet*`) y `sqlite_sequence`.
+- Esquema mínimo (lógico):
+  ```
+  Instrument ──< BoxItem >── Box
+                (Cantidad)
+  ```
 
 ---
 
-## Funcionalidades clave
-1. **Autenticación y roles**
-   - Circulante: acceso de solo lectura.
-   - Coordinación y Jefatura: edición y gestión del inventario y relaciones.
-2. **Búsqueda de instrumental**
-   - Filtros por nombre, tipo o código interno.
-   - Listado de **cajas** donde se encuentra el instrumento.
-3. **Detalle de caja**
-   - Contenido completo y acciones de **exportación CSV** y **impresión**.
-4. **Checklist pre/post**
-   - Registro digital de presentes/faltantes/sobrantes asociado al usuario autenticado.
-5. **ABM (Alta/Baja/Modificación)**
-   - Instrumentos, cajas y relaciones **BoxItem** (acceso restringido).
+## Seguridad
+
+- Páginas de ABM protegidas con **[Authorize]** (requiere login).
+- **Antiforgery** (CSRF): activo a nivel global; en el MVP algunos endpoints de formularios lo tienen deshabilitado para simplificar. En la siguiente iteración se añadirá el **token** a los formularios y se reactivará.
 
 ---
 
-## Roles y permisos
-| Rol           | Lectura | Edición/ABM | Checklists | Administración de usuarios |
-|---------------|:------:|:-----------:|:----------:|:--------------------------:|
-| Circulante    |   ✔    |      ✖      |     ✔      |             ✖              |
-| Coordinación  |   ✔    |      ✔      |     ✔      |             ✖              |
-| Jefatura      |   ✔    |      ✔      |     ✔      |             ✔              |
+## Estado actual
+
+- Autenticación (registro/login/logout) lista.
+- Instrumentos y Cajas: **crear / eliminar** y listar.
+- Contenido de Cajas: **agregar / quitar**; si agregás el mismo instrumento, **suma** cantidad.
+- Búsqueda y **detalle** de caja.
+- Sin dependencias externas (SQLite embebido).
 
 ---
 
-## Puesta en marcha (desarrollo local)
-**Requisitos**
-- .NET 8 SDK
-- Git
+## Roadmap corto
 
-**Procedimiento**
-1. Clonar el repositorio y acceder al proyecto de la aplicación.
-2. Revisar la cadena de conexión a **SQLite** en `appsettings.json` si corresponde.
-3. Compilar y, en caso de existir migraciones, actualizar la base de datos.
-4. Ejecutar la aplicación y acceder a la URL indicada por la consola.
-
-Comandos de referencia:
-- `git clone <URL_DEL_REPOSITORIO>`  
-- `cd KernelInstrumental/KernelInstrumental`  
-- `dotnet build`  
-- `dotnet ef database update` *(si existen migraciones)*  
-- `dotnet run`
+1. **Antiforgery**: agregar token en formularios y reactivar en endpoints.
+2. **Editar (Update)** en Instrumentos y Cajas (CRUD completo).
+3. **Checkbox “Activa”**:
+   - Cajas: parseo robusto del checkbox en el endpoint.
+   - Instrumentos: mismo checkbox mapeado a `Estado` (“Activo”/“Inactivo”).
+4. **Roles** (Admin/Operador) y **estilos** mínimos.
+5. Cuando el esquema se estabilice: pasar de **EnsureCreated** a **Migraciones EF**.
 
 ---
 
-## Plan de trabajo
-1. **Semana 1** — Proyecto base, modelos y configuración de SQLite.  
-2. **Semana 2** — Pantallas de Búsqueda y Detalle de Caja.  
-3. **Semana 3** — Checklist y ABM.  
-4. **Semana 4** — Exportación/Impresión y pruebas internas.  
-5. **Semana 5** — Validación con usuarios, capacitación breve y demostración.
+## Prueba rápida
 
----
-
-## Equipo
-**Kernel Soluciones Informáticas**  
-- Ahmed Camila  
-- Aldecoa Florencia  
-- Bravo Alejandro  
-- Olivera Alejandro  
-- Vogler Nicolás
-
----
-
-## Licencia
-Uso académico — Proyecto Final Tecnicatura Superior en Análisis de Sistemas.
+1. Registrate y logueate.  
+2. Crea 2 **Instrumentos** y 1–2 **Cajas**.  
+3. En **Contenido**, elegí una caja y agregá/quita instrumentos (probá repetir uno para ver la **consolidación**).  
+4. Buscá por nombre/tipo/código y navegá al **detalle** de la caja.  
