@@ -1,0 +1,46 @@
+@page "/boxes/{id:int}"
+@attribute [Authorize]
+@inject WebApp.Data.ApplicationDbContext Db
+@using Microsoft.EntityFrameworkCore
+@using WebApp.Models
+
+@if (box is null) { <p>Cargando…</p> }
+else
+{
+  <h3>@box.Nombre <span class="muted">(@box.Especialidad)</span></h3>
+  <div style="margin:8px 0">
+    <a class="button" href="@($"/boxes/{box.Id}/export")">Exportar CSV</a>
+    <button class="button" onclick="window.print()">Imprimir</button>
+  </div>
+  <table class="table">
+    <thead><tr><th>Instrumento</th><th>Tipo</th><th>Código</th><th class="text-right">Cantidad</th></tr></thead>
+    <tbody>
+      @foreach (var it in items)
+      {
+        <tr>
+          <td>@it.Instrument!.Nombre</td>
+          <td>@it.Instrument!.Tipo</td>
+          <td>@it.Instrument!.CodigoInterno</td>
+          <td class="text-right">@it.Cantidad</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}
+
+@code {
+  [Parameter] public int id { get; set; }
+  private Box? box;
+  private List<BoxItem> items = new();
+
+  protected override async Task OnParametersSetAsync()
+  {
+      box = await Db.Boxes.AsNoTracking().FirstOrDefaultAsync(b => b.Id == id);
+      if (box is null) return;
+      items = await Db.BoxItems.AsNoTracking()
+                .Where(x => x.BoxId == id)
+                .Include(x => x.Instrument)
+                .OrderBy(x => x.Instrument!.Nombre)
+                .ToListAsync();
+  }
+}

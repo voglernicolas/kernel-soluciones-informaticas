@@ -1,0 +1,16 @@
+
+@inherits LayoutComponentBase
+<header class="topbar">
+  <a class="brand" href="/">Kernel</a>
+  <nav class="nav">
+    <NavLink href="/" Match="NavLinkMatch.All">Inicio</NavLink>
+    <NavLink href="/admin/instruments">Instrumentos</NavLink>
+    <NavLink href="/admin/boxes">Cajas</NavLink>
+    <NavLink href="/admin/boxitems">Contenido</NavLink>
+    <a href="/Identity/Account/Login">Ingresar</a>
+  </nav>
+</header>
+
+<main class="content">
+  @Body
+</main>

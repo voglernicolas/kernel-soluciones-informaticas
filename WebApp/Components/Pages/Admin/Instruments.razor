@@ -1,0 +1,69 @@
+@page "/admin/instruments"
+@attribute [Authorize]
+@inject WebApp.Data.ApplicationDbContext Db
+@using WebApp.Models
+@using Microsoft.EntityFrameworkCore
+
+<h3>Instrumentos</h3>
+
+<EditForm Model="@newInstrument" OnValidSubmit="CreateAsync">
+  <DataAnnotationsValidator />
+  <div class="grid cols-2">
+    <InputText class="input" @bind-Value="newInstrument.Nombre" placeholder="Nombre" />
+    <InputText class="input" @bind-Value="newInstrument.Tipo" placeholder="Tipo" />
+    <InputText class="input" @bind-Value="newInstrument.CodigoInterno" placeholder="Código interno" />
+    <InputText class="input" @bind-Value="newInstrument.Estado" placeholder="Estado (opcional)" />
+  </div>
+  <div style="margin-top:8px">
+    <button class="button primary" type="submit">Agregar</button>
+  </div>
+</EditForm>
+
+<hr />
+
+@if (items is null)
+{
+  <p>Cargando…</p>
+}
+else
+{
+  <table class="table">
+    <thead><tr><th>Nombre</th><th>Tipo</th><th>Código</th><th>Estado</th><th></th></tr></thead>
+    <tbody>
+      @foreach (var i in items)
+      {
+        <tr>
+          <td>@i.Nombre</td><td>@i.Tipo</td><td>@i.CodigoInterno</td><td>@i.Estado</td>
+          <td><button class="button" @onclick="() => DeleteAsync(i.Id)">Eliminar</button></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}
+
+@code {
+  private List<Instrument>? items;
+  private Instrument newInstrument = new();
+
+  protected override async Task OnInitializedAsync() => await LoadAsync();
+
+  private async Task LoadAsync() =>
+      items = await Db.Instruments.OrderBy(x => x.Nombre).AsNoTracking().ToListAsync();
+
+  private async Task CreateAsync()
+  {
+      Db.Instruments.Add(newInstrument);
+      await Db.SaveChangesAsync();
+      newInstrument = new();
+      await LoadAsync();
+  }
+
+  private async Task DeleteAsync(int id)
+  {
+      var e = await Db.Instruments.FindAsync(id);
+      if (e is null) return;
+      Db.Remove(e);
+      await Db.SaveChangesAsync();
+      await LoadAsync();
+  }
+}

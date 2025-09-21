@@ -1,0 +1,68 @@
+@page "/admin/boxes"
+@attribute [Authorize]
+@inject WebApp.Data.ApplicationDbContext Db
+@using WebApp.Models
+@using Microsoft.EntityFrameworkCore
+
+<h3>Cajas</h3>
+
+<EditForm Model="@newBox" OnValidSubmit="CreateAsync">
+  <DataAnnotationsValidator />
+  <div class="grid cols-2">
+    <InputText class="input" @bind-Value="newBox.Nombre" placeholder="Nombre" />
+    <InputText class="input" @bind-Value="newBox.Especialidad" placeholder="Especialidad" />
+  </div>
+  <div style="margin-top:8px">
+    <label><InputCheckbox @bind-Value="newBox.Activo" /> Activa</label>
+    <button class="button primary" type="submit" style="margin-left:8px">Agregar</button>
+  </div>
+</EditForm>
+
+<hr />
+
+@if (items is null)
+{
+  <p>Cargando…</p>
+}
+else
+{
+  <table class="table">
+    <thead><tr><th>Nombre</th><th>Especialidad</th><th>Activa</th><th></th></tr></thead>
+    <tbody>
+      @foreach (var b in items)
+      {
+        <tr>
+          <td>@b.Nombre</td><td>@b.Especialidad</td><td>@(b.Activo ? "Sí" : "No")</td>
+          <td><button class="button" @onclick="() => DeleteAsync(b.Id)">Eliminar</button></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}
+
+@code {
+  private List<Box>? items;
+  private Box newBox = new();
+
+  protected override async Task OnInitializedAsync() => await LoadAsync();
+
+  private async Task LoadAsync() =>
+      items = await Db.Boxes.OrderBy(x => x.Nombre).AsNoTracking().ToListAsync();
+
+  private async Task CreateAsync()
+  {
+      Db.Boxes.Add(newBox);
+      await Db.SaveChangesAsync();
+      newBox = new();
+      await LoadAsync();
+  }
+
+  private async Task DeleteAsync(int id)
+  {
+      var e = await Db.Boxes.FindAsync(id);
+      if (e is null) return;
+      Db.Remove(e);
+      await Db.SaveChangesAsync();
+      await LoadAsync();
+  }
+}
