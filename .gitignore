@@ -1,0 +1,78 @@
+# ---- OS / editores ----
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*.orig
+
+# VS / Rider / IDE
+.vs/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.DotSettings.user
+
+# Build / artefactos .NET
+bin/
+obj/
+out/
+TestResult*/
+*.coverage
+*.coveragexml
+
+# Publicaciones locales
+*.pubxml
+*.pubxml.user
+
+# Paquetes / NuGet 
+packages/
+*.nupkg
+
+
+# Logs y temporales
+*.log
+*.tmp
+*.bak
+*.cache/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log
+
+# Web assets generados
+wwwroot/dist/
+wwwroot/.cache/
+
+# Config locales / secretos
+*.env
+*.env.*
+secrets.json
+appsettings.*.local.json
+
+# SQLite (DB en tiempo de desarrollo)
+*.db
+*.db-shm
+*.db-wal
+
+# Zips y dumps
+*.zip
+*.7z
+*.tar
+*.gz
+
+# Archivos de cobertura/reportes
+coverage/
+coverage-report/
+
+# Resharper
+_ReSharper.Caches/
+
+# Mac dotnet watcher
+**/.hotreload/
+
+# Rider solution metadata
+*.sln.iml
