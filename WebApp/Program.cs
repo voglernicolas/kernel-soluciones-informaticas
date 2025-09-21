@@ -157,26 +157,4 @@ using (var scope = app.Services.CreateScope())
 app.MapRazorPages();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-// Export CSV
-app.MapGet("/boxes/{id:int}/export", async (int id, ApplicationDbContext db) =>
-{
-    var box = await db.Boxes.AsNoTracking().FirstOrDefaultAsync(b => b.Id == id);
-    if (box is null) return Results.NotFound();
-
-    var items = await db.BoxItems
-        .AsNoTracking()
-        .Where(x => x.BoxId == id)
-        .Include(x => x.Instrument)
-        .OrderBy(x => x.Instrument!.Nombre)
-        .ToListAsync();
-
-    var sb = new System.Text.StringBuilder();
-    sb.AppendLine("Caja,Especialidad,Instrumento,Tipo,Codigo,Cantidad");
-    foreach (var it in items)
-        sb.AppendLine($"{box.Nombre},{box.Especialidad},{it.Instrument!.Nombre},{it.Instrument!.Tipo},{it.Instrument!.CodigoInterno},{it.Cantidad}");
-    var bytes = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
-    return Results.File(bytes, "text/csv", $"box_{id}.csv");
-}).RequireAuthorization();
-
-
 app.Run();

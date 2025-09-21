@@ -9,10 +9,6 @@
 else
 {
   <h3>@box.Nombre (@box.Especialidad)</h3>
-  <div>
-    <a href="@($"/boxes/{box.Id}/export")">Exportar CSV</a>
-    <button onclick="window.print()">Imprimir</button>
-  </div>
   <table>
     <thead><tr><th>Instrumento</th><th>Tipo</th><th>Código</th><th>Cantidad</th></tr></thead>
     <tbody>
