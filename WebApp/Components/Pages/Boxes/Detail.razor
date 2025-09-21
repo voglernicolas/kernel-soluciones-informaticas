@@ -1,3 +1,4 @@
+
 @page "/boxes/{id:int}"
 @attribute [Authorize]
 @inject WebApp.Data.ApplicationDbContext Db
@@ -7,13 +8,13 @@
 @if (box is null) { <p>Cargando…</p> }
 else
 {
-  <h3>@box.Nombre <span class="muted">(@box.Especialidad)</span></h3>
-  <div style="margin:8px 0">
-    <a class="button" href="@($"/boxes/{box.Id}/export")">Exportar CSV</a>
-    <button class="button" onclick="window.print()">Imprimir</button>
+  <h3>@box.Nombre (@box.Especialidad)</h3>
+  <div>
+    <a href="@($"/boxes/{box.Id}/export")">Exportar CSV</a>
+    <button onclick="window.print()">Imprimir</button>
   </div>
-  <table class="table">
-    <thead><tr><th>Instrumento</th><th>Tipo</th><th>Código</th><th class="text-right">Cantidad</th></tr></thead>
+  <table>
+    <thead><tr><th>Instrumento</th><th>Tipo</th><th>Código</th><th>Cantidad</th></tr></thead>
     <tbody>
       @foreach (var it in items)
       {
@@ -21,7 +22,7 @@ else
           <td>@it.Instrument!.Nombre</td>
           <td>@it.Instrument!.Tipo</td>
           <td>@it.Instrument!.CodigoInterno</td>
-          <td class="text-right">@it.Cantidad</td>
+          <td>@it.Cantidad</td>
         </tr>
       }
     </tbody>

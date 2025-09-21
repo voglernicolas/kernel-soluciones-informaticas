@@ -1,12 +1,13 @@
+
 @page "/search"
 @attribute [Authorize]
 @inject WebApp.Services.SearchService SearchSvc
 
 <h3>Búsqueda de instrumental</h3>
 
-<div class="grid cols-2">
-  <InputText class="input" @bind-Value="term" placeholder="Nombre, tipo o código..." />
-  <button class="button primary" @onclick="DoSearch" disabled="@busy">Buscar</button>
+<div>
+  <InputText @bind-Value="term" placeholder="Nombre, tipo o código..." />
+  <button @onclick="DoSearch" disabled="@busy">Buscar</button>
 </div>
 
 @if (busy) { <p>Cargando…</p> }
@@ -18,7 +19,7 @@
 
 @if (results?.Count > 0)
 {
-  <table class="table" style="margin-top:12px">
+  <table>
     <thead><tr><th>Instrumento</th><th>Tipo</th><th>Código</th><th>Cajas</th></tr></thead>
     <tbody>
       @foreach (var r in results)
@@ -31,10 +32,10 @@
             @if (r.Cajas.Count == 0) { <span>—</span> }
             else
             {
-              <ul style="margin:0;padding-left:16px">
+              <ul>
                 @foreach (var c in r.Cajas)
                 {
-                  <li><a href="@($"/boxes/{c.BoxId}")">@c.Nombre</a> <span class="muted">(@c.Especialidad) × @c.Cantidad</span></li>
+                  <li><a href="@($"/boxes/{c.BoxId}")">@c.Nombre</a> (@c.Especialidad) × @c.Cantidad</li>
                 }
               </ul>
             }

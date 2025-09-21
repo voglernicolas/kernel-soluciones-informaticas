@@ -21,7 +21,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         b.Entity<Instrument>().HasIndex(i => i.Nombre);
         b.Entity<Instrument>().HasIndex(i => i.Tipo);
-        b.Entity<Instrument>().HasIndex(i => i.CodigoInterno).IsUnique();
+        b.Entity<Instrument>().HasIndex(i => i.CodigoInterno); // non-unique for simplicity
 
         b.Entity<BoxItem>().HasOne(x => x.Box).WithMany(x => x.Items).HasForeignKey(x => x.BoxId);
         b.Entity<BoxItem>().HasOne(x => x.Instrument).WithMany(x => x.Boxes).HasForeignKey(x => x.InstrumentId);

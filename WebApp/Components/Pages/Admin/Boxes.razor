@@ -6,17 +6,19 @@
 
 <h3>Cajas</h3>
 
-<EditForm Model="@newBox" OnValidSubmit="CreateAsync">
-  <DataAnnotationsValidator />
-  <div class="grid cols-2">
-    <InputText class="input" @bind-Value="newBox.Nombre" placeholder="Nombre" />
-    <InputText class="input" @bind-Value="newBox.Especialidad" placeholder="Especialidad" />
-  </div>
-  <div style="margin-top:8px">
-    <label><InputCheckbox @bind-Value="newBox.Activo" /> Activa</label>
-    <button class="button primary" type="submit" style="margin-left:8px">Agregar</button>
-  </div>
-</EditForm>
+@if (!string.IsNullOrWhiteSpace(error))
+{
+  <p style="color:red">@error</p>
+}
+
+<form method="post" action="/admin/boxes/create">
+  <input name="Nombre" placeholder="Nombre" />
+  <input name="Especialidad" placeholder="Especialidad" />
+  <!-- patrón checkbox en SSR: false + true -->
+  <input type="hidden" name="Activo" value="false" />
+  <label><input type="checkbox" name="Activo" value="true" checked /> Activa</label>
+  <button type="submit">Agregar</button>
+</form>
 
 <hr />
 
@@ -26,14 +28,19 @@
 }
 else
 {
-  <table class="table">
+  <table>
     <thead><tr><th>Nombre</th><th>Especialidad</th><th>Activa</th><th></th></tr></thead>
     <tbody>
       @foreach (var b in items)
       {
         <tr>
           <td>@b.Nombre</td><td>@b.Especialidad</td><td>@(b.Activo ? "Sí" : "No")</td>
-          <td><button class="button" @onclick="() => DeleteAsync(b.Id)">Eliminar</button></td>
+          <td>
+            <form method="post" action="/admin/boxes/delete" style="display:inline">
+              <input type="hidden" name="Id" value="@b.Id" />
+              <button type="submit">Eliminar</button>
+            </form>
+          </td>
         </tr>
       }
     </tbody>
@@ -42,27 +49,9 @@ else
 
 @code {
   private List<Box>? items;
-  private Box newBox = new();
+  private string? error => Context?.Request?.Query["error"];
+  [CascadingParameter] public HttpContext? Context { get; set; }
 
-  protected override async Task OnInitializedAsync() => await LoadAsync();
-
-  private async Task LoadAsync() =>
+  protected override async Task OnInitializedAsync() =>
       items = await Db.Boxes.OrderBy(x => x.Nombre).AsNoTracking().ToListAsync();
-
-  private async Task CreateAsync()
-  {
-      Db.Boxes.Add(newBox);
-      await Db.SaveChangesAsync();
-      newBox = new();
-      await LoadAsync();
-  }
-
-  private async Task DeleteAsync(int id)
-  {
-      var e = await Db.Boxes.FindAsync(id);
-      if (e is null) return;
-      Db.Remove(e);
-      await Db.SaveChangesAsync();
-      await LoadAsync();
-  }
 }

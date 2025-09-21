@@ -1,40 +1,36 @@
 @page "/admin/boxitems"
 @attribute [Authorize]
 @inject WebApp.Data.ApplicationDbContext Db
-@using WebApp.Models
 @using Microsoft.EntityFrameworkCore
+@using WebApp.Models
 
 <h3>Contenido de Cajas</h3>
 
-<div class="grid cols-2">
-  <div>
-    <label>Caja</label>
-    <select class="input" @bind="SelectedBoxId" @bind:after="OnBoxChanged">
-      <option value="">-- Seleccioná una caja --</option>
-      @foreach (var b in Boxes) { <option value="@b.Id">@b.Nombre (@b.Especialidad)</option> }
-    </select>
-  </div>
-</div>
+<form method="get" action="/admin/boxitems">
+  <select name="boxId">
+    <option value="">-- Seleccioná una caja --</option>
+    @foreach (var b in Boxes) { <option value="@b.Id" selected="@(boxId == b.Id)">@b.Nombre (@b.Especialidad)</option> }
+  </select>
+  <button type="submit">Ver</button>
+</form>
 
-@if (SelectedBoxId is not null)
+@if (boxId is not null)
 {
   <hr />
-  <h5>Agregar instrumento a la caja</h5>
-  <div class="grid cols-2">
-    <select class="input" @bind="SelectedInstrumentId">
+  <h4>Agregar instrumento</h4>
+  <form method="post" action="/admin/boxitems/add">
+    <input type="hidden" name="BoxId" value="@boxId" />
+    <select name="InstrumentId">
       <option value="">-- Instrumento --</option>
       @foreach (var i in Instruments) { <option value="@i.Id">@i.Nombre (@i.CodigoInterno)</option> }
     </select>
-    <InputNumber class="input" @bind-Value="Cantidad" />
-  </div>
-  <div style="margin-top:8px">
-    <button class="button primary" @onclick="AddItem" disabled="@(!CanAdd)">Agregar</button>
-  </div>
+    <input type="number" name="Cantidad" value="1" min="1" />
+    <button type="submit">Agregar</button>
+  </form>
 
-  <table class="table" style="margin-top:12px">
-    <thead>
-      <tr><th>Instrumento</th><th>Tipo</th><th>Código</th><th class="text-right">Cantidad</th><th></th></tr>
-    </thead>
+  <h4>Contenido</h4>
+  <table>
+    <thead><tr><th>Instrumento</th><th>Tipo</th><th>Código</th><th>Cantidad</th><th></th></tr></thead>
     <tbody>
       @foreach (var it in BoxEntries)
       {
@@ -42,8 +38,14 @@
           <td>@it.Instrument!.Nombre</td>
           <td>@it.Instrument!.Tipo</td>
           <td>@it.Instrument!.CodigoInterno</td>
-          <td class="text-right">@it.Cantidad</td>
-          <td><button class="button" @onclick="() => RemoveItem(it.Id)">Quitar</button></td>
+          <td>@it.Cantidad</td>
+          <td>
+            <form method="post" action="/admin/boxitems/remove" style="display:inline">
+              <input type="hidden" name="Id" value="@it.Id" />
+              <input type="hidden" name="BoxId" value="@boxId" />
+              <button type="submit">Quitar</button>
+            </form>
+          </td>
         </tr>
       }
     </tbody>
@@ -51,49 +53,29 @@
 }
 
 @code {
-  private List<Box> Boxes { get; set; } = new();
-  private List<Instrument> Instruments { get; set; } = new();
-  private List<BoxItem> BoxEntries { get; set; } = new();
+  private List<Box> Boxes = new();
+  private List<Instrument> Instruments = new();
+  private List<BoxItem> BoxEntries = new();
+  private int? boxId;
 
-  private int? SelectedBoxId { get; set; }
-  private int? SelectedInstrumentId { get; set; }
-  private int Cantidad { get; set; } = 1;
-
-  private bool CanAdd => SelectedBoxId.HasValue && SelectedInstrumentId.HasValue && Cantidad > 0;
+  [CascadingParameter] public HttpContext? Context { get; set; }
 
   protected override async Task OnInitializedAsync()
   {
       Boxes = await Db.Boxes.OrderBy(b => b.Nombre).AsNoTracking().ToListAsync();
       Instruments = await Db.Instruments.OrderBy(i => i.Nombre).AsNoTracking().ToListAsync();
+      if (int.TryParse(Context?.Request?.Query["boxId"], out var q)) boxId = q;
+      await LoadItems();
   }
 
-  private async Task OnBoxChanged()
+  private async Task LoadItems()
   {
-      if (SelectedBoxId is null) { BoxEntries.Clear(); StateHasChanged(); return; }
-
+      if (boxId is null) { BoxEntries.Clear(); return; }
       BoxEntries = await Db.BoxItems
-          .Where(x => x.BoxId == SelectedBoxId)
-          .Include(x => x.Instrument)
-          .OrderBy(x => x.Instrument!.Nombre)
-          .AsNoTracking()
-          .ToListAsync();
-  }
-
-  private async Task AddItem()
-  {
-      if (!CanAdd) return;
-      Db.BoxItems.Add(new BoxItem { BoxId = SelectedBoxId!.Value, InstrumentId = SelectedInstrumentId!.Value, Cantidad = Cantidad });
-      await Db.SaveChangesAsync();
-      SelectedInstrumentId = null; Cantidad = 1;
-      await OnBoxChanged();
-  }
-
-  private async Task RemoveItem(int id)
-  {
-      var e = await Db.BoxItems.FindAsync(id);
-      if (e is null) return;
-      Db.Remove(e);
-      await Db.SaveChangesAsync();
-      await OnBoxChanged();
+        .Where(x => x.BoxId == boxId)
+        .Include(x => x.Instrument)
+        .OrderBy(x => x.Instrument!.Nombre)
+        .AsNoTracking()
+        .ToListAsync();
   }
 }
