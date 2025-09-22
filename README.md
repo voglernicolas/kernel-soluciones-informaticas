@@ -23,4 +23,3 @@ Se levanta en `http://127.0.0.1:5007` (perfil de launch incluido).
 - Cajas: `/admin/boxes`
 - Contenido: `/admin/boxitems`
 - Búsqueda: `/search`
-- Detalle: `/boxes/{id}` y CSV: `/boxes/{id}/export`
